@@ -23,8 +23,20 @@ BASE_TASKS = [
 ]
 
 DUAL_TASKS = [
+    'cuedTSWFlanker',
+    'directedForgettingWCuedTS',
+    'directedForgettingWFlanker',
+    'flankerWShapeMatching',
+    'nBackWShapeMatching',
+    'nBackWSpatialTS',
+    'shapeMatchingWCuedTS',
+    'spatialTSWCuedTS',
+    'spatialTSWShapeMatching',
     'stopSignalWDirectedForgetting',
+    'stopSignalWFlanker',
 ]
+
+CONFIGURED_TASKS = BASE_TASKS + DUAL_TASKS
 
 
 class TestListAvailableTasks:
@@ -45,20 +57,20 @@ class TestListAvailableTasks:
 class TestGetRawYamlConfig:
     """Tests for raw YAML config loading."""
 
-    @pytest.mark.parametrize('task_name', BASE_TASKS)
+    @pytest.mark.parametrize('task_name', CONFIGURED_TASKS)
     def test_load_each_task(self, task_name):
-        """Each base task YAML should load without errors."""
+        """Each configured task YAML should load without errors."""
         config = get_raw_yaml_config(task_name)
         assert isinstance(config, dict)
 
-    @pytest.mark.parametrize('task_name', BASE_TASKS)
+    @pytest.mark.parametrize('task_name', CONFIGURED_TASKS)
     def test_required_top_level_fields(self, task_name):
         """Each task config must have regressors and contrasts."""
         config = get_raw_yaml_config(task_name)
         assert 'regressors' in config
         assert 'contrasts' in config
 
-    @pytest.mark.parametrize('task_name', BASE_TASKS)
+    @pytest.mark.parametrize('task_name', CONFIGURED_TASKS)
     def test_regressor_fields(self, task_name):
         """Each regressor must have amplitude, duration, and subset."""
         config = get_raw_yaml_config(task_name)
@@ -82,7 +94,7 @@ class TestGetRawYamlConfig:
 class TestGetRegressorConfig:
     """Tests for regressor config conversion."""
 
-    @pytest.mark.parametrize('task_name', BASE_TASKS)
+    @pytest.mark.parametrize('task_name', CONFIGURED_TASKS)
     def test_returns_converted_format(self, task_name):
         """Converted regressors should have amplitude_column and duration_column."""
         regressors = get_regressor_config(task_name)
@@ -131,18 +143,20 @@ class TestGetRegressorConfig:
         assert regressors['stop_success']['subset'] is not None
         assert 'stop_success' in regressors['stop_success']['subset']
 
-    def test_empty_config_raises(self):
-        """Dual task with empty regressors should raise ValueError."""
-        with pytest.raises(ValueError, match='empty'):
-            get_regressor_config('stopSignalWDirectedForgetting')
+    def test_dual_nuisance_duration_convention(self):
+        """Dual-task nuisance regressors use event durations, matching base tasks."""
+        regressors = get_regressor_config('stopSignalWFlanker')
+        assert regressors['go_omission']['duration_column'] == 'duration'
+        assert regressors['go_commission']['duration_column'] == 'duration'
+        assert regressors['go_rt_fast']['duration_column'] == 'duration'
 
 
 class TestGetTaskContrasts:
     """Tests for contrast loading."""
 
-    @pytest.mark.parametrize('task_name', BASE_TASKS)
+    @pytest.mark.parametrize('task_name', CONFIGURED_TASKS)
     def test_returns_contrasts(self, task_name):
-        """Each base task should have at least one contrast."""
+        """Each configured task should have at least one contrast."""
         contrasts = get_task_contrasts(task_name)
         assert isinstance(contrasts, dict)
         assert len(contrasts) > 0
@@ -163,17 +177,17 @@ class TestGetTaskContrasts:
 
     def test_contrast_formulas_are_strings(self):
         """All contrast formulas should be strings."""
-        for task_name in BASE_TASKS:
+        for task_name in CONFIGURED_TASKS:
             contrasts = get_task_contrasts(task_name)
             for name, formula in contrasts.items():
                 assert isinstance(formula, str), (
                     f'{task_name}/{name} formula is not a string'
                 )
 
-    def test_empty_contrasts_raises(self):
-        """Dual task with empty contrasts should raise ValueError."""
-        with pytest.raises(ValueError, match='empty'):
-            get_task_contrasts('stopSignalWDirectedForgetting')
+    def test_stop_signal_dual_has_rt_contrast(self):
+        """Stop-signal dual tasks inherit this repo's RTDur contrast convention."""
+        contrasts = get_task_contrasts('stopSignalWFlanker')
+        assert 'response_time' in contrasts
 
 
 class TestGetTaskParameters:
@@ -196,8 +210,9 @@ class TestGetTaskParameters:
         assert params['min_rt'] == 0.2
         assert params['expected_sessions'] == 5
 
-    def test_dual_task_sessions(self):
+    @pytest.mark.parametrize('task_name', DUAL_TASKS)
+    def test_dual_task_sessions(self, task_name):
         """Dual tasks should have 2 expected sessions."""
-        params = get_task_parameters('stopSignalWDirectedForgetting')
+        params = get_task_parameters(task_name)
         assert params['expected_sessions'] == 2
 

@@ -28,6 +28,7 @@ DUAL_TASKS = [
     "flankerWShapeMatching",
     "cuedTSWFlanker",
     "spatialTSWShapeMatching",
+    "shapeMatchingWCuedTS",
     "nBackWShapeMatching",
     "nBackWSpatialTS",
 ]

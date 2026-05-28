@@ -1,11 +1,93 @@
-# DRAFT — dual-task config not yet defined.
-# Will be filled in with regressor configurations from a reference codebase.
-# Lev1 raises TaskNotConfiguredError on this task until `regressors:` is non-empty.
-
 tr: 1.49
-dummy_scans: 7  # informational; lev1 sets dummy_scans=0 (BOLDs pre-trimmed)
-expected_sessions: null
+dummy_scans: 7
 min_rt: 0.2
+expected_sessions: 2
 
-regressors: null
-contrasts: null
+# Stop-signal + flanker dual task
+# Trial types cross go/stop outcome with flanker congruency.
+# Nuisance regressors (omission, commission, rt_fast) are computed only for go trials.
+# The response_time regressor uses RT as duration for correct go trials.
+
+regressors:
+  go_omission:
+    amplitude: omission
+    duration: duration
+    subset: null
+
+  go_commission:
+    amplitude: commission
+    duration: duration
+    subset: null
+
+  go_rt_fast:
+    amplitude: rt_too_fast
+    duration: duration
+    subset: null
+
+  go_congruent:
+    amplitude: 1
+    duration: 1
+    subset: >-
+      trial_id == 'test_trial' and key_press == correct_response and response_time >= 0.2 and
+      trial_type == 'go_congruent'
+
+  go_incongruent:
+    amplitude: 1
+    duration: 1
+    subset: >-
+      trial_id == 'test_trial' and key_press == correct_response and response_time >= 0.2 and
+      trial_type == 'go_incongruent'
+
+  stop_success_congruent:
+    amplitude: 1
+    duration: 1
+    subset: >-
+      trial_type == 'stop_success_congruent'
+
+  stop_success_incongruent:
+    amplitude: 1
+    duration: 1
+    subset: >-
+      trial_type == 'stop_success_incongruent'
+
+  stop_failure_congruent:
+    amplitude: 1
+    duration: 1
+    subset: >-
+      trial_type == 'stop_failure_congruent'
+
+  stop_failure_incongruent:
+    amplitude: 1
+    duration: 1
+    subset: >-
+      trial_type == 'stop_failure_incongruent'
+
+  break_with_performance_feedback:
+    amplitude: 1
+    duration: 10
+    subset: >-
+      trial_id == 'break_with_performance_feedback'
+    events_query_min_coverage: 0.0
+
+  response_time:
+    amplitude: 1
+    duration: response_time
+    subset: >-
+      trial_id == 'test_trial' and key_press == correct_response and response_time >= 0.2 and
+      (trial_type == 'go_congruent' or trial_type == 'go_incongruent')
+
+contrasts:
+  go_congruent: "go_congruent"
+  go_incongruent: "go_incongruent"
+  stop_success_congruent: "stop_success_congruent"
+  stop_success_incongruent: "stop_success_incongruent"
+  stop_failure_congruent: "stop_failure_congruent"
+  stop_failure_incongruent: "stop_failure_incongruent"
+  go_incongruent-go_congruent: "go_incongruent-go_congruent"
+  (stop_success_congruent+stop_success_incongruent)-(go_congruent+go_incongruent): "1/2*(stop_success_congruent+stop_success_incongruent)-1/2*(go_congruent+go_incongruent)"
+  (stop_failure_congruent+stop_failure_incongruent)-(go_congruent+go_incongruent): "1/2*(stop_failure_congruent+stop_failure_incongruent)-1/2*(go_congruent+go_incongruent)"
+  stopSignalWFlanker_stop_success_interaction: "1/2*(stop_success_incongruent-go_incongruent)-1/2*(stop_success_congruent-go_congruent)"
+  stopSignalWFlanker_stop_failure_interaction: "1/2*(stop_failure_incongruent-go_incongruent)-1/2*(stop_failure_congruent-go_congruent)"
+  stop_success_congruent-go_congruent: "stop_success_congruent-go_congruent"
+  task-baseline: "1/6*(go_congruent+go_incongruent+stop_success_congruent+stop_success_incongruent+stop_failure_congruent+stop_failure_incongruent)"
+  response_time: "response_time"

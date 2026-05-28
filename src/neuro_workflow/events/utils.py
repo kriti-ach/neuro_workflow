@@ -90,6 +90,7 @@ _TRIAL_TYPE_LOOKUP = {
     "shape_matching_with_spatial_task_switching__fmri": ["predictable_condition", "shape_matching_condition"],
     "shape_matching_with_spatial_task_switching": ["predictable_condition", "shape_matching_condition"],
     "shape_matching_with_cued_task_switching__fmri": ["task_condition", "cue_condition", "shape_matching_condition"],
+    "shape_matching_with_cued_task_switching": ["task_condition", "cue_condition", "shape_matching_condition"],
     "n_back_with_spatial_task_switching__fmri": ["n_back_condition", "task_switch_condition"],
 }
 
@@ -114,8 +115,11 @@ def add_cols(df: pd.DataFrame, exp_id: str) -> pd.DataFrame:
             df2["trial_type"] = "t" + df[trial_types[0]] + "_c" + df[trial_types[1]]
         elif exp_id == "cued_task_switching_with_directed_forgetting__fmri":
             df2["trial_type"] = df[trial_types[0]] + "_t" + df[trial_types[1]] + "_c" + df[trial_types[2]]
-        elif exp_id == "shape_matching_with_cued_task_switching__fmri":
-            df2["trial_type"] = "t" + df[trial_types[0]] + "_c" + df[trial_types[1]]
+        elif exp_id in {
+            "shape_matching_with_cued_task_switching__fmri",
+            "shape_matching_with_cued_task_switching",
+        }:
+            df2["trial_type"] = df[trial_types[2]] + "_t" + df[trial_types[0]] + "_c" + df[trial_types[1]]
         elif exp_id == "flanker_with_cued_task_switching__fmri":
             df2["trial_type"] = "c" + df[trial_types[0]] + "_t" + df[trial_types[1]] + "_" + df[trial_types[2]]
         elif exp_id == "n_back_with_shape_matching__fmri":

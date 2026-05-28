@@ -31,7 +31,7 @@ def test_lev1_template_exists():
 
 def test_lev1_task_constants():
     assert len(BASE_TASKS) == 8
-    assert len(DUAL_TASKS) == 10
+    assert len(DUAL_TASKS) == 11
     assert ALL_TASKS == BASE_TASKS + DUAL_TASKS
 
 

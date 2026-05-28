@@ -80,6 +80,27 @@ class TestAddCols:
         assert "trial_type" in result.columns
         assert "SS_delay" in result.columns
 
+    def test_shape_matching_with_cued_ts_trial_type_includes_shape_condition(self):
+        from neuro_workflow.events.utils import add_cols
+        df = pd.DataFrame({
+            "trial_id": ["test_trial"],
+            "time_elapsed": [1000.0],
+            "rt": [450.0],
+            "stim_duration": [1000.0],
+            "choice_acc": [1],
+            "key_press": [37],
+            "correct_response": [37],
+            "cue": ["cue"],
+            "task_condition": ["switch"],
+            "cue_condition": ["switch"],
+            "shape_matching_condition": ["SSS"],
+            "probe": ["probe"],
+            "target": ["target"],
+            "distractor": ["distractor"],
+        })
+        result = add_cols(df, "shape_matching_with_cued_task_switching__fmri")
+        assert result["trial_type"].iloc[0] == "SSS_tswitch_cswitch"
+
 
 class TestResponseTimeAndJunk:
     def test_stop_signal_trial_types(self):
